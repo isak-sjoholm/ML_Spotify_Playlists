@@ -77,7 +77,10 @@ print(f"Total number of unique songs: {len(deduped)}")
 
 ## Authenticate to Google Sheets via service account
 service_account_info = json.loads(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))
-scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+scopes = [
+    'https://www.googleapis.com/auth/spreadsheets.readonly',
+    'https://www.googleapis.com/auth/drive.readonly'
+]
 creds = Credentials.from_service_account_info(service_account_info, scopes=scopes)
 gc = gspread.authorize(creds)
 
