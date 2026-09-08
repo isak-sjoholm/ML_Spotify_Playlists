@@ -104,5 +104,27 @@ X = training_data_clean[feature_cols].copy()
 y = training_data_clean['target'].copy()
 
 
+
 # Split into a stratified test/train split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=training_data_clean['feedback'])
+
+
+
+# Train a LightGBM model to forecast a numeric transformation of the feedback target Dislike/Maybe/Like
+train_set = lgb.Dataset(X_train, label=y_train)
+test_set = lgb.Dataset(X_test, label=y_test, reference=train_set)
+
+params = {
+    'objective': 'regression',
+    'metric': 'mae',
+    'verbosity': -1,
+    'seed': 42
+}
+
+model = lgb.train(
+    params,
+    train_set,
+    num_boost_round=200,
+    valid_sets=[test_set],
+    callbacks=[lgb.early_stopping(stopping_rounds=20), lgb.log_evaluation(0)]
+)
