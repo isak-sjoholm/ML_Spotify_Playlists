@@ -161,3 +161,11 @@ for position in range(50):
 
 playlist_df = pd.DataFrame(playlist_rows)
 print(playlist_df[['Låtens namn', 'Artistens namn', 'predicted_score']])
+
+
+
+# Save top 50 predicted songs to a Spotify playlist
+track_uris = playlist_df['Låtens URI'].tolist()
+sp.playlist_replace_items(playlist_id, track_uris)
+updated = sp.playlist(playlist_id)
+print(f"Playlist updated with {updated['tracks']['total']} tracks")
