@@ -2,6 +2,8 @@ name: Retrain and update playlist
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'
 
 jobs:
   retrain:
