@@ -7,6 +7,7 @@ import pandas as pd
 import glob
 import os
 import json
+from datetime import datetime, timedelta, timezone
 
 
 ## Google
@@ -91,6 +92,19 @@ rows = sheet.get_all_values()
 ## Save feedback in df
 feedback_df = pd.DataFrame(rows, columns=['created_at', 'track_uri', 'track_position', 'feedback'])
 feedback_df['track_position'] = feedback_df['track_position'].astype(int)
+
+
+# If no feedback in last 24h, cancel
+feedback_df['created_at_parsed'] = pd.to_datetime(feedback_df['created_at'], utc=True)
+newest_feedback = feedback_df['created_at_parsed'].max()
+cutoff = datetime.now(timezone.utc) - timedelta(days=1)
+
+if newest_feedback < cutoff:
+    print(f"Last feedback: {newest_feedback}. Nothing new last 24h, quitting.")
+    exit()
+
+print(f"Last feedback: {newest_feedback}. Continues with träning.")
+
 
 ## Join with Spotify data
 training_data = feedback_df.merge(deduped, left_on='track_uri', right_on='Låtens URI', how='left')
