@@ -128,3 +128,36 @@ model = lgb.train(
     valid_sets=[test_set],
     callbacks=[lgb.early_stopping(stopping_rounds=20), lgb.log_evaluation(0)]
 )
+
+
+
+# Predict target for all valid songs for each playlist position and save top 50
+candidate_pool = deduped.rename(columns={
+    'Dansbarhet': 'Dansbarhet', 'Energi': 'Energi', 'Tonart': 'Tonart',
+    'Ljudstyrka': 'Ljudstyrka', 'Läge': 'Läge', 'Talighet': 'Talighet',
+    'Akustik': 'Akustik', 'Instrumentalhet': 'Instrumentalhet',
+    'Livlighet': 'Livlighet', 'Valens': 'Valens', 'Tempo': 'Tempo',
+    'Taktart': 'Taktart', 'Popularitet': 'Popularitet'
+}).copy()
+
+# Remove songs with missing audio features
+audio_feature_cols = [c for c in feature_cols if c != 'track_position']
+candidate_pool = candidate_pool.dropna(subset=audio_feature_cols).reset_index(drop=True)
+remaining_pool = candidate_pool.copy()
+
+playlist_rows = []
+
+# Loop over each playlist position & predict target value (necessary since playlist position is fed as input feature)
+for position in range(50):
+    remaining_pool['track_position'] = position
+    scores = model.predict(remaining_pool[feature_cols])
+    best_idx = scores.argmax()
+
+    best_row = remaining_pool.iloc[best_idx].copy()
+    best_row['predicted_score'] = scores[best_idx]
+    playlist_rows.append(best_row)
+
+    remaining_pool = remaining_pool.drop(remaining_pool.index[best_idx]).reset_index(drop=True)
+
+playlist_df = pd.DataFrame(playlist_rows)
+print(playlist_df[['Låtens namn', 'Artistens namn', 'predicted_score']])
