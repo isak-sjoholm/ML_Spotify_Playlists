@@ -92,3 +92,17 @@ feedback_df['track_position'] = feedback_df['track_position'].astype(int)
 ## Join with Spotify data
 training_data = feedback_df.merge(deduped, left_on='track_uri', right_on='Låtens URI', how='left')
 training_data_clean = training_data[training_data['Låtens URI'].notna()].copy()
+
+
+
+# Set up the data with correct features and target
+feedback_map = {'dislike': 0.0, 'maybe': 0.5, 'like': 1.0}
+training_data_clean['target'] = training_data_clean['feedback'].map(feedback_map)
+
+feature_cols = ['Dansbarhet', 'Energi', 'Tonart', 'Ljudstyrka', 'Läge', 'Talighet', 'Akustik', 'Instrumentalhet', 'Livlighet', 'Valens', 'Tempo', 'Taktart', 'Popularitet', 'track_position']
+X = training_data_clean[feature_cols].copy()
+y = training_data_clean['target'].copy()
+
+
+# Split into a stratified test/train split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=training_data_clean['feedback'])
